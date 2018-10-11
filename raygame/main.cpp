@@ -9,10 +9,11 @@
 #include <iostream>
 #include<fstream>
 #include <sstream> 
+#include "Leaderboard.h"
 
 void Restart();
-int getleader(int list[]);
-int setleader(int list[]);
+int getleader(Leaderstuff list[]);
+int setleader(Leaderstuff list[]);
 
 int main()
 {
@@ -25,6 +26,10 @@ int main()
 	bool death = false;
 	int zombs = 1;
 	bool leaderopen = false;
+	int bullshitluck = 0;
+	std::string buffer;
+	int namelimit = 0;
+
 	InitWindow(screenWidth, screenHeight, "zombie defense");
 
 	SetTargetFPS(60);
@@ -44,7 +49,7 @@ int main()
 	zomb.pos.x = 750;
 	zomb.pos.y = rand() % 450;
 	zomb.radius = 10.0f;            
-	zomb.speed = 100.0f;
+	zomb.speed = 30.0f;
 	zomb.value = 50;
 	zomb.enabled = true;
 
@@ -59,14 +64,14 @@ int main()
 		zombies[i].value = 50;
 		zombies[i].enabled = true;
 	}
-	int LeaderBoard[11];
+	Leaderstuff LeaderBoard[11];
 
 	for (int i = 0; i < 10; ++i)
 	{
-		LeaderBoard[i] = 0;
+		LeaderBoard[i].score = 0;
 	}
 	//--------------------------------------------------------------------------------------
-
+	
 	float duration = 0;
 	// Main game loop
 	while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -104,11 +109,22 @@ int main()
 			{
 				if (CheckCollisionCircles(bull.pos, bull.radius, zombies[i].pos, zombies[i].radius))
 				{
-					zombies[i].pos.x = 850;
-					zombies[i].pos.y = rand() % 450;
-					bull.enabled = false;
-					++score;
-
+					bullshitluck = rand() % 1000;
+					
+					if (bullshitluck == 666) 
+					{
+						zombies[i].pos.x = 1;
+						zombies[i].pos.y = rand() % 450;
+						bull.enabled = false;
+						++score;
+					}
+					else 
+					{
+						zombies[i].pos.x = 850;
+						zombies[i].pos.y = rand() % 450;
+						bull.enabled = false;
+						++score;
+					}
 				}
 			}
 		}
@@ -130,7 +146,7 @@ int main()
 			if (!death)
 			{
 				duration += GetFrameTime();
-				if (IsKeyDown(KEY_SPACE))
+				if (IsKeyDown(KEY_SPACE) or IsMouseButtonDown(MOUSE_LEFT_BUTTON))
 				{
 					if (!bull.enabled) {
 						bull.pos.x = player.pos.x;
@@ -175,28 +191,51 @@ int main()
 				DrawText("Time", 330, 0, 20, LIGHTGRAY);
 				DrawText(std::to_string(duration).c_str(), 380, 0, 20, LIGHTGRAY);
 			}
-			if (death)
+			if ((death) and (namelimit != 3))
 			{
 				
-				DrawText(("Congrats You Killed " +  (std::to_string(score)) + " Zombies!").c_str(), 190, 90, 20, RED);
+				DrawText(("Congrats You Killed " +  (std::to_string(score)) + " Zombies!").c_str(), 190, 90, 20, BLACK);
 				int finish = duration;
-				DrawText(("And survived " + (std::to_string(finish)) + " seconds!").c_str(), 190, 110, 20, RED);
-				DrawText("Would you like to restart? y/n", 190, 130, 20, RED);
-				for (int i = 0; i < 10; ++i)
-				{
-					std::string temp = std::to_string(i + 1);
-					DrawText ((temp + ": " + std::to_string(LeaderBoard[i])).c_str(), 190, (150 + (i * 20)), 20, RED);
-				}
+				DrawText(("And survived " + (std::to_string(finish)) + " seconds!").c_str(), 190, 110, 20, BLACK);
+				DrawText("What would you like to be know by", 190, 130, 20, BLACK);
 				
-				if (leaderopen ==false) 
+				
+			
+				if ((GetKeyPressed() != -1) and (namelimit <= 2))
+				{
+					buffer += GetKeyPressed();
+					++namelimit;
+				}
+				DrawText((buffer).c_str(), 290, 230, 20, BLACK);
+				
+				
+				
+				
+				
+				
+
+			}	
+			else if ((death) and (namelimit == 3)) 
+			{
+			
+				if (leaderopen == false) 
 				{
 					getleader(LeaderBoard);
-					LeaderBoard[10] = score;
+					LeaderBoard[10].score = score;
+					LeaderBoard[10].name = buffer;
 					setleader(LeaderBoard);
 					leaderopen = true;
 				}
 
-				if (IsKeyDown(KEY_Y)) 
+				for (int i = 0; i < 10; ++i)
+				{
+					std::string temp = std::to_string(i + 1);
+					DrawText ((temp + ": " + LeaderBoard[i].name + "   " + std::to_string(LeaderBoard[i].score)).c_str(), 190, (150 + (i * 20)), 20, BLACK);
+				}
+
+				DrawText("Would you like to restart? y/n", 190, 130, 20, BLACK);
+				
+				if (IsKeyDown(KEY_Y))
 				{
 					CloseWindow();
 					Restart();
@@ -205,8 +244,10 @@ int main()
 				{
 					return 0;
 				}
-
-			}	
+			
+			
+			
+			}
 
 			EndDrawing();
 		
@@ -222,7 +263,7 @@ int main()
 }
 
 
-int getleader(int list[])
+int getleader(Leaderstuff list[])
 {
 	std::fstream file;
 	file.open( "LeaderBoard.bin", std::ios::in | std::ios::binary);
@@ -237,8 +278,10 @@ int getleader(int list[])
 		std::getline(file, buffer);
 		
 		std::stringstream geek(buffer);
+		geek >> list[i].score;
 		
-		geek >> list[i];
+		std::getline(file, buffer);
+		list[i].name = buffer;
 		
 	}
 
@@ -247,7 +290,7 @@ int getleader(int list[])
 	return 0;
 }
 
-int setleader(int list[]) 
+int setleader(Leaderstuff list[])
 {
 	std::fstream file;
 	file.open("LeaderBoard.bin", std::ios::out | std::ios::binary);
@@ -260,17 +303,21 @@ int setleader(int list[])
 	do
 	{
 		int temp;
+		std::string temp2;
 		correct = 0;
 		for (int i = 0; i < 10; ++i)
 		{
-			if (list[i] < list[i + 1])
+			if (list[i].score < list[i + 1].score)
 			{
-				temp = list[i + 1];
-				list[i + 1] = list[i];
-				list[i] = temp;
+				temp = list[i + 1].score;
+				list[i + 1].score = list[i].score;
+				list[i].score = temp;
 
+				temp2 = list[i + 1].name;
+				list[i + 1].name = list[i].name;
+				list[i].name = temp2;
 			}
-			else if (list[i] >= list[i + 1])
+			else if (list[i].score >= list[i + 1].score)
 			{
 				++correct;
 			}
@@ -279,8 +326,8 @@ int setleader(int list[])
 
 	for (int i = 0; i < 10; ++i)
 	{
-		file << list[i] << std::endl;
-
+		file << list[i].score << std::endl;
+		file << list[i].name << std::endl;
 	}
 	file.flush();
 	file.close();
