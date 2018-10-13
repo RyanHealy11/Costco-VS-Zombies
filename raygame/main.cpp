@@ -20,15 +20,19 @@ int main()
 	srand(time(NULL));
 	// Initialization
 	//--------------------------------------------------------------------------------------
-	int screenWidth = 800;
+	int screenWidth = 900;
 	int screenHeight = 450;
 	int score = 0;
 	bool death = false;
 	int zombs = 1;
 	bool leaderopen = false;
 	int bullshitluck = 0;
+	int multi = 1;
 	std::string buffer;
 	int namelimit = 0;
+	bool nameentered = false;
+	int fastspawn = 0;
+	int fatspawn = 0;
 
 	InitWindow(screenWidth, screenHeight, "zombie defense");
 
@@ -45,7 +49,7 @@ int main()
 	player.radius =  10.0f ;
 	player.speed = 400.0f;
 
-	pickup zomb;
+	Zombies zomb;
 	zomb.pos.x = 750;
 	zomb.pos.y = rand() % 450;
 	zomb.radius = 10.0f;            
@@ -53,7 +57,33 @@ int main()
 	zomb.value = 50;
 	zomb.enabled = true;
 
-	pickup zombies[100];
+	Zombies fastZombies[10];
+	Zombies fatZombies[10];
+	Zombies zombies[100];
+
+
+	for (int i = 0; i < 10; ++i)
+	{
+		fatZombies[i].pos.x = 850;
+		fatZombies[i].pos.y = rand() % 450;
+		fatZombies[i].radius = 20.0f;
+		fatZombies[i].speed = 10.0f;
+		fatZombies[i].value = 50;
+		fatZombies[i].enabled = true;
+		fatZombies[i].fat = true;
+		fatZombies[i].health = 10;
+	}
+
+	for (int i = 0; i < 10; ++i)
+	{
+		fastZombies[i].pos.x = 850;
+		fastZombies[i].pos.y = rand() % 450;
+		fastZombies[i].radius = 10.0f;
+		fastZombies[i].speed = 90.0f;
+		fastZombies[i].value = 50;
+		fastZombies[i].enabled = true;
+		fastZombies[i].fast = true;
+	}
 
 	for (int i = 0; i < 100; ++i) 
 	{
@@ -71,7 +101,7 @@ int main()
 		LeaderBoard[i].score = 0;
 	}
 	//--------------------------------------------------------------------------------------
-	
+	/*score = 10000;*/
 	float duration = 0;
 	// Main game loop
 	while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -98,13 +128,115 @@ int main()
 			}
 		}
 		
+		if (fastspawn <= 10) 
+		{
+			for (int i = 0; i < fastspawn; i++)
+			{
+				fastZombies[i].update(GetFrameTime(), player.pos.x, player.pos.y);
+			}
+		}
+		else 
+		{
+			for (int i = 0; i < 10; i++)
+			{
+				fastZombies[i].update(GetFrameTime(), player.pos.x, player.pos.y);
+			}
+		}
+		fastspawn = (score / 5000);
+
+		if (fatspawn <= 10)
+		{
+			for (int i = 0; i < fatspawn; i++)
+			{
+				fatZombies[i].update(GetFrameTime(), player.pos.x, player.pos.y);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < 10; i++)
+			{
+				fatZombies[i].update(GetFrameTime(), player.pos.x, player.pos.y);
+			}
+		}
+		fatspawn = (score / 10000);
+		
 		if (bull.enabled)
 		{
 			bull.update(GetFrameTime());
 		}
 		
+		
+		
+		for (int i = 0; i < 10; i++)
+		{
+			if (CheckCollisionCircles(player.pos, player.radius, fastZombies[i].pos, fastZombies[i].radius))
+			{
+				death = true;
+			}
+			if (CheckCollisionCircles(player.pos, player.radius, fatZombies[i].pos, fatZombies[i].radius))
+			{
+				death = true;
+			}
+			if (bull.enabled)
+			{
+				if (CheckCollisionCircles(bull.pos, bull.radius, fastZombies[i].pos, fastZombies[i].radius))
+				{
+					bullshitluck = rand() % 1000;
+
+					if (bullshitluck == 666)
+					{
+						fastZombies[i].pos.x = 1;
+						fastZombies[i].pos.y = rand() % 450;
+						bull.enabled = false;
+						score += (multi * 2);
+						++multi;
+					}
+					else
+					{
+						fastZombies[i].pos.x = 850;
+						fastZombies[i].pos.y = rand() % 450;
+						bull.enabled = false;
+						score += (multi * 2);
+						++multi;
+					}
+				}
+				if (CheckCollisionCircles(bull.pos, bull.radius, fatZombies[i].pos, fatZombies[i].radius))
+				{
+					bullshitluck = rand() % 1000;
+					--fatZombies[i].health;
+
+
+					if (fatZombies[i].health <= 0) 
+					{
+						if (bullshitluck == 666)
+						{
+							fatZombies[i].pos.x = 1;
+							fatZombies[i].pos.y = rand() % 450;
+							bull.enabled = false;
+							score += (multi * 5);
+							++multi;
+							fatZombies[i].health = 10;
+						}
+						else
+						{
+							fatZombies[i].pos.x = 850;
+							fatZombies[i].pos.y = rand() % 450;
+							bull.enabled = false;
+							score += (multi * 5);
+							++multi;
+							fatZombies[i].health = 10;
+						}
+					}
+					bull.enabled = false;
+				}
+			}
+		}
 		for (int i = 0; i < 100; ++i) 
 		{
+			if (CheckCollisionCircles(player.pos, player.radius, zombies[i].pos, zombies[i].radius))
+			{
+				death = true;
+			}
 			if (bull.enabled) 
 			{
 				if (CheckCollisionCircles(bull.pos, bull.radius, zombies[i].pos, zombies[i].radius))
@@ -116,26 +248,22 @@ int main()
 						zombies[i].pos.x = 1;
 						zombies[i].pos.y = rand() % 450;
 						bull.enabled = false;
-						++score;
+						score += multi;
+						++multi;
 					}
 					else 
 					{
 						zombies[i].pos.x = 850;
 						zombies[i].pos.y = rand() % 450;
 						bull.enabled = false;
-						++score;
-					}
+						score += multi;
+						++multi;
+					}					
 				}
 			}
 		}
 
-		for (int i = 0; i < 100; ++i)
-		{
-			if (CheckCollisionCircles(player.pos, player.radius, zombies[i].pos, zombies[i].radius))
-			{
-				death = true;
-			}
-		}
+		
 		//----------------------------------------------------------------------------------
 
 		// Draw
@@ -169,6 +297,7 @@ int main()
 					bull.draw();
 					if (bull.pos.x >= 800) 
 					{
+						multi = 1;
 						bull.enabled = false;
 					}
 				}
@@ -178,6 +307,12 @@ int main()
 				{
 					zombies[i].draw();
 				}
+				for (int i = 0; i < 10; i++)
+				{
+					fastZombies[i].draw();
+					fatZombies[i].draw();
+				}
+				
 				
 				player.draw();
 				DrawText("Score", 3, 0, 20, LIGHTGRAY);
@@ -190,8 +325,9 @@ int main()
 				
 				DrawText("Time", 330, 0, 20, LIGHTGRAY);
 				DrawText(std::to_string(duration).c_str(), 380, 0, 20, LIGHTGRAY);
+
 			}
-			if ((death) and (namelimit != 3))
+			if ((death) and (!nameentered))
 			{
 				
 				DrawText(("Congrats You Killed " +  (std::to_string(score)) + " Zombies!").c_str(), 190, 90, 20, BLACK);
@@ -199,23 +335,26 @@ int main()
 				DrawText(("And survived " + (std::to_string(finish)) + " seconds!").c_str(), 190, 110, 20, BLACK);
 				DrawText("What would you like to be know by", 190, 130, 20, BLACK);
 				
-				
-			
-				if ((GetKeyPressed() != -1) and (namelimit <= 2))
+
+				if (IsKeyPressed(KEY_ENTER) and namelimit == 3) 
+				{
+					nameentered = true;
+				}
+				else if (IsKeyPressed(KEY_BACKSPACE) and (namelimit != 0))
+				{
+					buffer.erase(buffer.begin() + (namelimit - 1));
+					--namelimit;
+				}
+				else if ((GetKeyPressed() != -1) and (namelimit <= 2))
 				{
 					buffer += GetKeyPressed();
 					++namelimit;
 				}
+
 				DrawText((buffer).c_str(), 290, 230, 20, BLACK);
-				
-				
-				
-				
-				
-				
 
 			}	
-			else if ((death) and (namelimit == 3)) 
+			else if ((death) and (nameentered)) 
 			{
 			
 				if (leaderopen == false) 

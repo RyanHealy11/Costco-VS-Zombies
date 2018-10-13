@@ -1,13 +1,24 @@
 #include "zombie.h"
 #include"raylib.h"
-void pickup::draw()
+void Zombies::draw()
 {
 	if (enabled) 
 	{
-		DrawCircle(pos.x, pos.y, radius, DARKGREEN);
+		if (fast)
+		{
+			DrawCircle(pos.x, pos.y, radius, { 0, 0, 255, 255 });
+		}
+		else if (fat)
+		{
+			DrawCircle(pos.x, pos.y, radius, { 0, 255, 255, 255 });
+		}
+		else
+		{
+			DrawCircle(pos.x, pos.y, radius, DARKGREEN);
+		}
 	}
 }
-void pickup::update(float deltatime, float targetX, float targetY)
+void Zombies::update(float deltatime, float targetX, float targetY)
 {
 	if (pos.x >= 200)
 	{

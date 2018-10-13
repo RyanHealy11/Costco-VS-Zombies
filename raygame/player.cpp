@@ -11,7 +11,8 @@ void ball::update(float deltatime)
 	{
 		pos.y += speed * deltatime;
 	}
-	if (IsKeyDown(KEY_A) or IsKeyDown(KEY_LEFT))
+	if (IsKeyDown(KEY_A)
+		or IsKeyDown(KEY_LEFT))
 	{
 		pos.x -= speed * deltatime;
 	}
