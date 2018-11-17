@@ -11,9 +11,12 @@ public:
 	float speed;
 	int value;
 	int health;
+	int starthealth;
 	bool enabled;
+	int scoremulti;
 	bool fast = false;
 	bool fat = false;
+	bool boss = false;
 
 	void draw();
 	void update(float deltatime, float targetX, float targetY);

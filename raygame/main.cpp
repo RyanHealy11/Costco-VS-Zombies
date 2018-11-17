@@ -7,34 +7,102 @@
 #include "bullet.h"
 #include <ctime>
 #include <iostream>
-#include<fstream>
+#include <fstream>
 #include <sstream> 
 #include "Leaderboard.h"
 
 void Restart();
 int getleader(Leaderstuff list[]);
 int setleader(Leaderstuff list[]);
+void collisioncheck(Zombies zlist[], bullet& bull, ball player, bool& death, int& score ,int& multi, int zombcount);
 
-int main()
+
+int main() 
+{
+	int screenWidth = 800;
+	int screenHeight = 450;
+
+	InitWindow(screenWidth, screenHeight, "zombie defense");
+
+
+	Vector2 PlayBorderpos = { 300,100 };
+	Vector2 LeaderBorderpos = { 300, 200};
+	Vector2 ExitBorderpos = { 300, 300};
+	Rectangle BorderRec = {0, 0, 150, 75};
+	Rectangle PlayButton = { 300,100,150,75, };
+	Rectangle LeaderButton = { 300, 200, 150, 75 };
+	Rectangle ExitButton = { 300, 300, 150, 75 };
+	Image buttonBorder = LoadImage("textures/Border.png");
+	ImageResize(&buttonBorder, BorderRec.width, BorderRec.height);
+	Texture2D PlayBorder = LoadTextureFromImage(buttonBorder);
+	int Game();
+	int LeaderBoard(Texture2D image);
+
+	while (!WindowShouldClose()) {
+		//update start
+		if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) 
+		{
+			Vector2 mPos = GetMousePosition();
+		
+			if (CheckCollisionPointRec(mPos, PlayButton)) { Game(); }
+			if (CheckCollisionPointRec(mPos, LeaderButton)) { LeaderBoard(PlayBorder); }
+			if (CheckCollisionPointRec(mPos, ExitButton)) { CloseWindow(); return 0; }
+				
+		}
+		//update end
+
+
+		BeginDrawing(); //drawing start
+		ClearBackground(RAYWHITE);
+
+
+		DrawRectangleRec(PlayButton, RED);
+		DrawTextureRec(PlayBorder, BorderRec, PlayBorderpos, BLACK);
+		DrawText("Play", 340, 125, 30, BLACK);
+
+		DrawRectangleRec(LeaderButton, RED);
+		DrawTextureRec(PlayBorder, BorderRec, LeaderBorderpos, BLACK);
+		DrawText("Leaderboard", 310, 230, 20, BLACK);
+
+		DrawRectangleRec(ExitButton, RED);
+		DrawTextureRec(PlayBorder, BorderRec, ExitBorderpos, BLACK);
+		DrawText("Exit",348, 325, 30, BLACK);
+
+		EndDrawing(); //drawing end
+
+
+	}
+
+
+	CloseWindow();
+}
+
+int Game()
 {
 	srand(time(NULL));
 	// Initialization
 	//--------------------------------------------------------------------------------------
-	int screenWidth = 900;
-	int screenHeight = 450;
+	
 	int score = 0;
 	bool death = false;
-	int zombs = 1;
+	
 	bool leaderopen = false;
 	int bullshitluck = 0;
 	int multi = 1;
 	std::string buffer;
 	int namelimit = 0;
 	bool nameentered = false;
+	bool scorefinalized = false;
 	int fastspawn = 0;
 	int fatspawn = 0;
-
-	InitWindow(screenWidth, screenHeight, "zombie defense");
+	int bossspawn = 0;
+	int finalscore;
+	bool loaded = false;
+	Vector2 target;
+	Vector2 players;
+	Texture2D costco = LoadTexture("textures/costco.png");
+	Vector2 costcopos{ 50,420 };
+	
 
 	SetTargetFPS(60);
 	
@@ -59,9 +127,10 @@ int main()
 
 	Zombies fastZombies[10];
 	Zombies fatZombies[10];
+	Zombies bossZombies[5];
 	Zombies zombies[100];
 
-
+	//fat
 	for (int i = 0; i < 10; ++i)
 	{
 		fatZombies[i].pos.x = 850;
@@ -72,8 +141,10 @@ int main()
 		fatZombies[i].enabled = true;
 		fatZombies[i].fat = true;
 		fatZombies[i].health = 10;
+		fatZombies[i].starthealth = 10;
+		fatZombies[i].scoremulti = 5;
 	}
-
+	//fast
 	for (int i = 0; i < 10; ++i)
 	{
 		fastZombies[i].pos.x = 850;
@@ -83,8 +154,25 @@ int main()
 		fastZombies[i].value = 50;
 		fastZombies[i].enabled = true;
 		fastZombies[i].fast = true;
+		fastZombies[i].health = 1;
+		fastZombies[i].starthealth = 1;
+		fastZombies[i].scoremulti = 2;
 	}
-
+	//boss
+	for (int i = 0; i < 5; ++i) 
+	{
+		bossZombies[i].pos.x = 930;
+		bossZombies[i].pos.y = rand() % 450;
+		bossZombies[i].radius = 100.0f;
+		bossZombies[i].speed = 5.0f;
+		bossZombies[i].value = 50;
+		bossZombies[i].enabled = true;
+		bossZombies[i].boss = true;
+		bossZombies[i].health = 100;
+		bossZombies[i].starthealth = 100;
+		bossZombies[i].scoremulti = 10;
+	}
+	//grunts
 	for (int i = 0; i < 100; ++i) 
 	{
 		zombies[i].pos.x = 850;
@@ -93,9 +181,13 @@ int main()
 		zombies[i].speed = 30.0f;
 		zombies[i].value = 50;
 		zombies[i].enabled = true;
+		zombies[i].health = 1;
+		zombies[i].starthealth = 1;
+		zombies[i].scoremulti = 1;
 	}
+	
+	//seting leaderboard
 	Leaderstuff LeaderBoard[11];
-
 	for (int i = 0; i < 10; ++i)
 	{
 		LeaderBoard[i].score = 0;
@@ -159,113 +251,31 @@ int main()
 			}
 		}
 		fatspawn = (score / 10000);
-		
-		if (bull.enabled)
+
+		if (bossspawn <= 10)
 		{
-			bull.update(GetFrameTime());
-		}
-		
-		
-		
-		for (int i = 0; i < 10; i++)
-		{
-			if (CheckCollisionCircles(player.pos, player.radius, fastZombies[i].pos, fastZombies[i].radius))
+			for (int i = 0; i < bossspawn; i++)
 			{
-				death = true;
-			}
-			if (CheckCollisionCircles(player.pos, player.radius, fatZombies[i].pos, fatZombies[i].radius))
-			{
-				death = true;
-			}
-			if (bull.enabled)
-			{
-				if (CheckCollisionCircles(bull.pos, bull.radius, fastZombies[i].pos, fastZombies[i].radius))
-				{
-					bullshitluck = rand() % 1000;
-
-					if (bullshitluck == 666)
-					{
-						fastZombies[i].pos.x = 1;
-						fastZombies[i].pos.y = rand() % 450;
-						bull.enabled = false;
-						score += (multi * 2);
-						++multi;
-					}
-					else
-					{
-						fastZombies[i].pos.x = 850;
-						fastZombies[i].pos.y = rand() % 450;
-						bull.enabled = false;
-						score += (multi * 2);
-						++multi;
-					}
-				}
-				if (CheckCollisionCircles(bull.pos, bull.radius, fatZombies[i].pos, fatZombies[i].radius))
-				{
-					bullshitluck = rand() % 1000;
-					--fatZombies[i].health;
-
-
-					if (fatZombies[i].health <= 0) 
-					{
-						if (bullshitluck == 666)
-						{
-							fatZombies[i].pos.x = 1;
-							fatZombies[i].pos.y = rand() % 450;
-							bull.enabled = false;
-							score += (multi * 5);
-							++multi;
-							fatZombies[i].health = 10;
-						}
-						else
-						{
-							fatZombies[i].pos.x = 850;
-							fatZombies[i].pos.y = rand() % 450;
-							bull.enabled = false;
-							score += (multi * 5);
-							++multi;
-							fatZombies[i].health = 10;
-						}
-					}
-					bull.enabled = false;
-				}
+				bossZombies[i].update(GetFrameTime(), player.pos.x, player.pos.y);
 			}
 		}
-		for (int i = 0; i < 100; ++i) 
+		else
 		{
-			if (CheckCollisionCircles(player.pos, player.radius, zombies[i].pos, zombies[i].radius))
+			for (int i = 0; i < 10; i++)
 			{
-				death = true;
-			}
-			if (bull.enabled) 
-			{
-				if (CheckCollisionCircles(bull.pos, bull.radius, zombies[i].pos, zombies[i].radius))
-				{
-					bullshitluck = rand() % 1000;
-					
-					if (bullshitluck == 666) 
-					{
-						zombies[i].pos.x = 1;
-						zombies[i].pos.y = rand() % 450;
-						bull.enabled = false;
-						score += multi;
-						++multi;
-					}
-					else 
-					{
-						zombies[i].pos.x = 850;
-						zombies[i].pos.y = rand() % 450;
-						bull.enabled = false;
-						score += multi;
-						++multi;
-					}					
-				}
+				bossZombies[i].update(GetFrameTime(), player.pos.x, player.pos.y);
 			}
 		}
-
+		bossspawn = (score / 100000);
 		
+		if (bull.enabled){ bull.update(GetFrameTime(), players, target); }
+		
+		collisioncheck(bossZombies,bull,player,death,score,multi,5);
+		collisioncheck(fastZombies, bull, player, death, score, multi, 10);
+		collisioncheck(fatZombies, bull, player, death, score, multi, 10);
+		collisioncheck(zombies, bull, player, death, score, multi, 100);
+				
 		//----------------------------------------------------------------------------------
-
 		// Draw
 		//----------------------------------------------------------------------------------
 		
@@ -273,37 +283,47 @@ int main()
 			ClearBackground(RAYWHITE);
 			if (!death)
 			{
+				
+				//timer
 				duration += GetFrameTime();
+				
+				//spawns the bullet to the screen
 				if (IsKeyDown(KEY_SPACE) or IsMouseButtonDown(MOUSE_LEFT_BUTTON))
 				{
 					if (!bull.enabled) {
+						target = GetMousePosition();
+						players = player.pos;
 						bull.pos.x = player.pos.x;
 						bull.pos.y = player.pos.y;
 						bull.enabled = true;
 					}
 				}
 				
+				//draws the roof to the screen
 				DrawRectangle(0, 0, 216, 450, GRAY);
 				DrawRectangle(216, 0, 584, 450, GREEN);
 		
-				DrawText("C", 90, 90, 40, RED);
-				DrawText("O", 90, 130, 40, RED);
-				DrawText("S", 90, 170, 40, RED);
-				DrawText("T", 90, 210, 40, RED);
-				DrawText("C", 90, 250, 40, RED);
-				DrawText("O", 90, 290, 40, RED);
+				//displays the costco on the roof
+				DrawTextureEx(costco, costcopos, 270, 0.75f, WHITE);
+						
+				//drawing the bullet to the screen
 				if (bull.enabled)
 				{
 					bull.draw();
-					if (bull.pos.x >= 800) 
+					if (bull.pos.x >= (GetScreenWidth() + 10) or bull.pos.x <= -10) 
 					{
-						multi = 1;
+						--multi;
+						bull.enabled = false;
+					}
+					if (bull.pos.y >= (GetScreenHeight() + 10) or bull.pos.y <= -10)
+					{
+						--multi;
 						bull.enabled = false;
 					}
 				}
 
-
-				for (int i = 0; i < 100; ++i)
+				//drawing zombs to the screen 
+				for (int i = 0; i < 100; i++)
 				{
 					zombies[i].draw();
 				}
@@ -312,30 +332,51 @@ int main()
 					fastZombies[i].draw();
 					fatZombies[i].draw();
 				}
+				for (int i = 0; i < 5; i++)
+				{
+					bossZombies[i].draw();
+				}
 				
-				
-				player.draw();
+				//display score in top left of screen
 				DrawText("Score", 3, 0, 20, LIGHTGRAY);
 				DrawText(std::to_string(score).c_str(), 70, 0, 20, LIGHTGRAY);
+				
+				//displays the current muliplier 
+				DrawText("Multiplier", 3, 20, 20, LIGHTGRAY);
+				DrawText(std::to_string(multi).c_str(), 100, 20, 20, LIGHTGRAY);
+				
+				//draws the player to the screen
+				player.draw();
 
-				if (player.pos.x <= 0) { player.pos.x = 0; }
+				//makes sure the player stays on the roof
+				if (player.pos.x <= 10) { player.pos.x = 10; }
 				if (player.pos.x >= 200) { player.pos.x = 200; }
 				if (player.pos.y <= 0) { player.pos.y = 0; }
 				if (player.pos.y >= 450) { player.pos.y = 450; }
 				
-				DrawText("Time", 330, 0, 20, LIGHTGRAY);
-				DrawText(std::to_string(duration).c_str(), 380, 0, 20, LIGHTGRAY);
+				//displays the time to the screen
+				DrawText("Time", 330, 0, 20, BLACK);
+				DrawText(std::to_string(duration).c_str(), 380, 0, 20, BLACK);
 
 			}
 			if ((death) and (!nameentered))
 			{
-				
-				DrawText(("Congrats You Killed " +  (std::to_string(score)) + " Zombies!").c_str(), 190, 90, 20, BLACK);
+				// sets final timer
 				int finish = duration;
+				if (!scorefinalized) 
+				{
+					scorefinalized = true;
+					finalscore = score;
+				}
+				//displays score and final time as well as prompting for a name to enter
+				DrawText(("Congrats Your Score was " +  (std::to_string(finalscore))).c_str(), 190, 90, 20, BLACK);
 				DrawText(("And survived " + (std::to_string(finish)) + " seconds!").c_str(), 190, 110, 20, BLACK);
 				DrawText("What would you like to be know by", 190, 130, 20, BLACK);
+				DrawText("Press Enter when done", 190, 230, 20, BLACK);
 				
-
+				//-----------------------------------------------------------------
+				// leaderboard name stuff
+				//-----------------------------------------------------------------
 				if (IsKeyPressed(KEY_ENTER) and namelimit == 3) 
 				{
 					nameentered = true;
@@ -351,16 +392,16 @@ int main()
 					++namelimit;
 				}
 
-				DrawText((buffer).c_str(), 290, 230, 20, BLACK);
-
+				DrawText((buffer).c_str(), 290, 180, 30, BLACK);
+				//-----------------------------------------------------------------
 			}	
 			else if ((death) and (nameentered)) 
 			{
-			
+				int finish = duration;
 				if (leaderopen == false) 
 				{
 					getleader(LeaderBoard);
-					LeaderBoard[10].score = score;
+					LeaderBoard[10].score = finalscore;
 					LeaderBoard[10].name = buffer;
 					setleader(LeaderBoard);
 					leaderopen = true;
@@ -369,15 +410,19 @@ int main()
 				for (int i = 0; i < 10; ++i)
 				{
 					std::string temp = std::to_string(i + 1);
-					DrawText ((temp + ": " + LeaderBoard[i].name + "   " + std::to_string(LeaderBoard[i].score)).c_str(), 190, (150 + (i * 20)), 20, BLACK);
+					DrawText((temp + ": ").c_str(), 300, (150 + (i * 20)), 20, BLACK);
+					DrawText((LeaderBoard[i].name).c_str(), 330, (150 + (i * 20)), 20, BLACK);
+					DrawText((std::to_string(LeaderBoard[i].score)).c_str(), 380, (150 + (i * 20)), 20, BLACK);
 				}
 
-				DrawText("Would you like to restart? y/n", 190, 130, 20, BLACK);
+				DrawText(("Congrats Your Score was " + (std::to_string(finalscore))).c_str(), 190, 90, 20, BLACK);
+				DrawText(("And survived " + (std::to_string(finish)) + " seconds!").c_str(), 190, 110, 20, BLACK);
+
+				DrawText("Would you like to restart? y/n", 230, 370, 20, BLACK);
 				
 				if (IsKeyDown(KEY_Y))
 				{
-					CloseWindow();
-					Restart();
+					Game();
 				}
 				if (IsKeyDown(KEY_N))
 				{
@@ -395,12 +440,56 @@ int main()
 
 	// De-Initialization
 	//--------------------------------------------------------------------------------------   
-	CloseWindow();        // Close window and OpenGL context
+	/*CloseWindow();*/        // Close window and OpenGL context
 	//--------------------------------------------------------------------------------------
 
 	return 0;
 }
 
+int LeaderBoard(Texture2D image)
+{
+	Leaderstuff LeaderBoard[11];
+
+	for (int i = 0; i < 10; ++i)
+	{
+		LeaderBoard[i].score = 0;
+	}
+	getleader(LeaderBoard);
+
+	Vector2 BackBorderpos = { 300, 350 };
+	Rectangle BorderRec = { 0, 0, 150, 75 };
+	Rectangle BackButton = { 300,350,150,75, };
+
+	while (!WindowShouldClose()) 
+	{
+
+		if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+		{
+			Vector2 mPos = GetMousePosition();
+
+			if (CheckCollisionPointRec(mPos, BackButton)) { return 0; }
+			
+		}
+
+		BeginDrawing();
+		ClearBackground(RAYWHITE);
+		
+
+		DrawRectangleRec(BackButton, RED);
+		DrawTextureRec(image, BorderRec, BackBorderpos, BLACK);
+		DrawText("BACK", 335, 375, 30, BLACK);
+		
+		DrawText("Current Leaders", 270, 105 , 25, BLACK);
+		for (int i = 0; i < 10; ++i)
+		{
+			std::string temp = std::to_string(i + 1);
+			DrawText((temp + ": ").c_str() , 300, (130 + (i * 20)), 20, BLACK);
+			DrawText((LeaderBoard[i].name).c_str(), 330, (130 + (i * 20)), 20, BLACK);
+			DrawText((std::to_string(LeaderBoard[i].score)).c_str(), 380, (130 + (i * 20)), 20, BLACK);
+		}
+		EndDrawing();
+	}
+}
 
 int getleader(Leaderstuff list[])
 {
@@ -474,6 +563,51 @@ int setleader(Leaderstuff list[])
 
 
 }
+
+void collisioncheck(Zombies zlist[], bullet& bull, ball player, bool& death, int& score, int& multi, int zombcount)
+{
+
+	for (int i = 0; i < zombcount; i++)
+	{
+		if (CheckCollisionCircles(player.pos, player.radius, zlist[i].pos, zlist[i].radius))
+		{
+			death = true;
+		}
+		if (bull.enabled)
+		{
+			if (CheckCollisionCircles(bull.pos, bull.radius, zlist[i].pos, zlist[i].radius))
+			{
+				int bullshitluck = rand() % 1000;
+				--zlist[i].health;
+				bull.enabled = false;
+
+				if (zlist[i].health <= 0)
+				{
+					if (bullshitluck == 666)
+					{
+
+						zlist[i].pos.x = 1;
+						zlist[i].pos.y = rand() % 450;
+						bull.enabled = false;
+						score += (multi * zlist[i].scoremulti);
+						++multi;
+						zlist[i].health = zlist[i].starthealth;
+					}
+					else
+					{
+						zlist[i].pos.x = 850;
+						zlist[i].pos.y = rand() % 450;
+						bull.enabled = false;
+						score += (multi * zlist[i].scoremulti);
+						++multi;
+						zlist[i].health = zlist[i].starthealth;
+					}
+				}
+			}
+		}
+	}
+}
+
 void Restart() 
 {
 	main();

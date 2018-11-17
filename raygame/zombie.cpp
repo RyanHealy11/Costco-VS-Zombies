@@ -10,7 +10,11 @@ void Zombies::draw()
 		}
 		else if (fat)
 		{
-			DrawCircle(pos.x, pos.y, radius, { 0, 255, 255, 255 });
+			DrawCircle(pos.x, pos.y, radius, { 148,0,211, 255 });
+		}
+		else if (boss)
+		{
+			DrawCircle(pos.x, pos.y, radius, { 255, 105, 180, 255 });
 		}
 		else
 		{
@@ -24,7 +28,7 @@ void Zombies::update(float deltatime, float targetX, float targetY)
 	{
 		pos.x -= speed * deltatime;
 	}
-	else 
+	else
 	{
 		if (targetY < pos.y)
 		{

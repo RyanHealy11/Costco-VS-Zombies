@@ -27,6 +27,9 @@
     <ClCompile Include="player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gamestate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bullet.h">
@@ -39,6 +42,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Leaderboard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamestate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Zombstate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="leaderstate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="menustate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="endstate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

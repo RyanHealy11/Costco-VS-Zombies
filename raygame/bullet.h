@@ -12,5 +12,5 @@ public:
 	bool enabled;
 
 	void draw();
-	void update(float deltatime);
+	void update(float deltatime, Vector2 player, Vector2 target);
 };
