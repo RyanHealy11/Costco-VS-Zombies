@@ -24,7 +24,7 @@ void Zombies::draw()
 }
 void Zombies::update(float deltatime, float targetX, float targetY)
 {
-	if (pos.x >= 200)
+	if (pos.x >= 210)
 	{
 		pos.x -= speed * deltatime;
 	}

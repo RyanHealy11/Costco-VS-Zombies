@@ -2,7 +2,7 @@
 #include "gamestate.h"
 #include <string>
 
-class wariostate : public gamestate
+class Zombstate : public gamestate
 {
     float duration;
     float timeLimit;
@@ -11,7 +11,7 @@ class wariostate : public gamestate
 
 public:
 
-    wariostate()
+	Zombstate()
     {
         duration = 0.0f;
         timeLimit = 4.0f;

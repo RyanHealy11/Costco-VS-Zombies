@@ -13,10 +13,10 @@ void setupGameState(gamestate *&ptr, GameStates newState)
     switch(newState)
     {
         case GameStates::NONE:  ptr = new gamestate();  break;
-      //  case GameStates::LeaderBoard: ptr = new splashstate(); break;
-      //  case GameStates::MENU:  ptr = new menustate();  break;
-        case GameStates::Zomb: ptr = new wariostate(); break;
-    //    case GameStates::END:   ptr = new endstate();   break;
+        case GameStates::LeaderBoard: ptr = new leaderstate(); break;
+        case GameStates::MENU:  ptr = new menustate();  break;
+        case GameStates::Zomb: ptr = new Zombstate(); break;
+        case GameStates::END:   ptr = new endstate();   break;
         default: assert(false && "Invalid state specified.");
     }
 }
