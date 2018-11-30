@@ -14,7 +14,7 @@
 void Restart();
 int getleader(Leaderstuff list[]);
 int setleader(Leaderstuff list[]);
-void collisioncheck(Zombies zlist[], bullet& bull, ball player, bool& death, int& score ,int& multi, int zombcount);
+void collisioncheck(Zombies zlist[], bullet& bull, ball player, bool& death, unsigned int& score ,int& multi, int zombcount);
 
 
 int main() 
@@ -83,7 +83,7 @@ int Game()
 	// Initialization
 	//--------------------------------------------------------------------------------------
 	
-	int score = 0;
+	unsigned int score = 0;
 	bool death = false;
 	
 	bool leaderopen = false;
@@ -96,7 +96,7 @@ int Game()
 	int fastspawn = 0;
 	int fatspawn = 0;
 	int bossspawn = 0;
-	int finalscore;
+	unsigned int finalscore;
 	bool loaded = false;
 	Vector2 target;
 	Vector2 players;
@@ -193,7 +193,8 @@ int Game()
 		LeaderBoard[i].score = 0;
 	}
 	//--------------------------------------------------------------------------------------
-	/*score = 10000;*/
+	/*score = 1000000;
+	multi = 1;*/
 	float duration = 0;
 	// Main game loop
 	while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -252,7 +253,7 @@ int Game()
 		}
 		fatspawn = (score / 10000);
 
-		if (bossspawn <= 10)
+		if (bossspawn <= 5)
 		{
 			for (int i = 0; i < bossspawn; i++)
 			{
@@ -261,7 +262,7 @@ int Game()
 		}
 		else
 		{
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 5; i++)
 			{
 				bossZombies[i].update(GetFrameTime(), player.pos.x, player.pos.y);
 			}
@@ -313,11 +314,13 @@ int Game()
 					if (bull.pos.x >= (GetScreenWidth() + 10) or bull.pos.x <= -10) 
 					{
 						--multi;
+						if (multi < 0) { multi = 0; }
 						bull.enabled = false;
 					}
 					if (bull.pos.y >= (GetScreenHeight() + 10) or bull.pos.y <= -10)
 					{
 						--multi;
+						if (multi < 0) { multi = 0; }
 						bull.enabled = false;
 					}
 				}
@@ -564,7 +567,7 @@ int setleader(Leaderstuff list[])
 
 }
 
-void collisioncheck(Zombies zlist[], bullet& bull, ball player, bool& death, int& score, int& multi, int zombcount)
+void collisioncheck(Zombies zlist[], bullet& bull, ball player, bool& death, unsigned int& score, int& multi, int zombcount)
 {
 
 	for (int i = 0; i < zombcount; i++)
