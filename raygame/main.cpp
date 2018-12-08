@@ -113,7 +113,7 @@ int Game()
 	bull.enabled = false;
 
 	ball player;
-	player.pos = { 100, 100 };
+	player.pos = { 100, 225 };
 	player.radius =  10.0f ;
 	player.speed = 400.0f;
 
@@ -130,7 +130,7 @@ int Game()
 	Zombies bossZombies[5];
 	Zombies zombies[100];
 
-	//fat
+	//fat initialization
 	for (int i = 0; i < 10; ++i)
 	{
 		fatZombies[i].pos.x = 850;
@@ -144,7 +144,7 @@ int Game()
 		fatZombies[i].starthealth = 10;
 		fatZombies[i].scoremulti = 5;
 	}
-	//fast
+	//fast initialization
 	for (int i = 0; i < 10; ++i)
 	{
 		fastZombies[i].pos.x = 850;
@@ -158,7 +158,7 @@ int Game()
 		fastZombies[i].starthealth = 1;
 		fastZombies[i].scoremulti = 2;
 	}
-	//boss
+	//boss initialization
 	for (int i = 0; i < 5; ++i) 
 	{
 		bossZombies[i].pos.x = 930;
@@ -172,7 +172,7 @@ int Game()
 		bossZombies[i].starthealth = 100;
 		bossZombies[i].scoremulti = 10;
 	}
-	//grunts
+	//grunts initialization
 	for (int i = 0; i < 100; ++i) 
 	{
 		zombies[i].pos.x = 850;
@@ -391,8 +391,11 @@ int Game()
 				}
 				else if ((GetKeyPressed() != -1) and (namelimit <= 2))
 				{
-					buffer += GetKeyPressed();
-					++namelimit;
+					if (!IsKeyPressed(KEY_SPACE)) 
+					{
+						buffer += GetKeyPressed();
+						++namelimit;
+					}
 				}
 
 				DrawText((buffer).c_str(), 290, 180, 30, BLACK);
