@@ -98,6 +98,11 @@ int Game()
 	int bossspawn = 0;
 	unsigned int finalscore;
 	bool loaded = false;
+	const int zombnum = 100;
+	const int fastzombnum = 10;
+	const int fatzombnum = 10;
+	const int bosszombnum = 5;
+
 	Vector2 target;
 	Vector2 players;
 	Texture2D costco = LoadTexture("textures/costco.png");
@@ -125,13 +130,13 @@ int Game()
 	zomb.value = 50;
 	zomb.enabled = true;
 
-	Zombies fastZombies[10];
-	Zombies fatZombies[10];
-	Zombies bossZombies[5];
-	Zombies zombies[100];
+	Zombies fastZombies[fastzombnum];
+	Zombies fatZombies[fatzombnum];
+	Zombies bossZombies[bosszombnum];
+	Zombies zombies[zombnum];
 
 	//fat initialization
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < fatzombnum; ++i)
 	{
 		fatZombies[i].pos.x = 850;
 		fatZombies[i].pos.y = rand() % 450;
@@ -145,7 +150,7 @@ int Game()
 		fatZombies[i].scoremulti = 5;
 	}
 	//fast initialization
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < fastzombnum; ++i)
 	{
 		fastZombies[i].pos.x = 850;
 		fastZombies[i].pos.y = rand() % 450;
@@ -159,7 +164,7 @@ int Game()
 		fastZombies[i].scoremulti = 2;
 	}
 	//boss initialization
-	for (int i = 0; i < 5; ++i) 
+	for (int i = 0; i < bosszombnum; ++i) 
 	{
 		bossZombies[i].pos.x = 930;
 		bossZombies[i].pos.y = rand() % 450;
@@ -173,7 +178,7 @@ int Game()
 		bossZombies[i].scoremulti = 10;
 	}
 	//grunts initialization
-	for (int i = 0; i < 100; ++i) 
+	for (int i = 0; i < zombnum; ++i) 
 	{
 		zombies[i].pos.x = 850;
 		zombies[i].pos.y = rand() % 450;
@@ -204,7 +209,7 @@ int Game()
 		//----------------------------------------------------------------------------------
 		player.update(GetFrameTime());
 		
-		if (duration > 100)	
+		if (duration > zombnum)	
 		{
 			for (int i = 0; i < 100; ++i)
 			{
@@ -212,7 +217,7 @@ int Game()
 
 			}
 		}
-		else if (duration < 100)
+		else if (duration < zombnum)
 		{
 			for (int i = 0; i < duration; ++i)
 			{
@@ -221,7 +226,7 @@ int Game()
 			}
 		}
 		
-		if (fastspawn <= 10) 
+		if (fastspawn <= fastzombnum) 
 		{
 			for (int i = 0; i < fastspawn; i++)
 			{
@@ -230,14 +235,14 @@ int Game()
 		}
 		else 
 		{
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < fastzombnum; i++)
 			{
 				fastZombies[i].update(GetFrameTime(), player.pos.x, player.pos.y);
 			}
 		}
 		fastspawn = (score / 5000);
 
-		if (fatspawn <= 10)
+		if (fatspawn <= fatzombnum)
 		{
 			for (int i = 0; i < fatspawn; i++)
 			{
@@ -246,14 +251,14 @@ int Game()
 		}
 		else
 		{
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < fatzombnum; i++)
 			{
 				fatZombies[i].update(GetFrameTime(), player.pos.x, player.pos.y);
 			}
 		}
 		fatspawn = (score / 10000);
 
-		if (bossspawn <= 5)
+		if (bossspawn <= bosszombnum)
 		{
 			for (int i = 0; i < bossspawn; i++)
 			{
@@ -262,7 +267,7 @@ int Game()
 		}
 		else
 		{
-			for (int i = 0; i < 5; i++)
+			for (int i = 0; i < bosszombnum; i++)
 			{
 				bossZombies[i].update(GetFrameTime(), player.pos.x, player.pos.y);
 			}
@@ -271,10 +276,10 @@ int Game()
 		
 		if (bull.enabled){ bull.update(GetFrameTime(), players, target); }
 		
-		collisioncheck(bossZombies,bull,player,death,score,multi,5);
-		collisioncheck(fastZombies, bull, player, death, score, multi, 10);
-		collisioncheck(fatZombies, bull, player, death, score, multi, 10);
-		collisioncheck(zombies, bull, player, death, score, multi, 100);
+		collisioncheck(bossZombies,bull,player,death,score,multi,bosszombnum);
+		collisioncheck(fastZombies, bull, player, death, score, multi, fastzombnum);
+		collisioncheck(fatZombies, bull, player, death, score, multi, fatzombnum);
+		collisioncheck(zombies, bull, player, death, score, multi, zombnum);
 				
 		//----------------------------------------------------------------------------------
 		// Draw
@@ -326,16 +331,19 @@ int Game()
 				}
 
 				//drawing zombs to the screen 
-				for (int i = 0; i < 100; i++)
+				for (int i = 0; i < zombnum; i++)
 				{
 					zombies[i].draw();
 				}
-				for (int i = 0; i < 10; i++)
+				for (int i = 0; i < fastzombnum; i++)
 				{
 					fastZombies[i].draw();
+				}
+				for (int i = 0; i < fatzombnum; i++)
+				{
 					fatZombies[i].draw();
 				}
-				for (int i = 0; i < 5; i++)
+				for (int i = 0; i < bosszombnum; i++)
 				{
 					bossZombies[i].draw();
 				}
@@ -434,9 +442,6 @@ int Game()
 				{
 					return 0;
 				}
-			
-			
-			
 			}
 
 			EndDrawing();
